@@ -241,7 +241,6 @@ if [ $PEAR = 1 ]; then
         exit 2
     fi
     
-    if [ $VMAJOR -gt 5 -o $VMINOR -ge 4 ]; then
         echo "Installing PEAR environment:     $instdir/pear/"
         mkdir -p "$instdir/pear/php"
         sapi/cli/php -n                 \
@@ -273,7 +272,7 @@ if [ $PEAR = 1 ]; then
             echo PEAR installation failed.
             exit 5
         fi
-    fi
+    
     
     #add symlink to extension directory as "ext"
     #for compatibility with Pyrus.
