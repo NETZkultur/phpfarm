@@ -3,7 +3,7 @@
 # phpfarm
 #
 # Installs multiple versions of PHP beside each other.
-# Both CLI and CGI versions are compiled.
+# CLI version is compiled.
 # Sources are fetched from museum.php.net if no
 # corresponding file bzips/php-$version.tar.bz2 exists.
 #
@@ -12,7 +12,7 @@
 #
 # You should add ../inst/bin to your $PATH to have easy access
 # to all php binaries. The executables are called
-# php-$version and php-cgi-$version
+# php-$version
 #
 # In case the options in options.sh do not suit you or you just need
 # different options for different php versions, you may create
@@ -170,19 +170,11 @@ if [ $configure -gt $tstamp ]; then
         otheroptions="$otheroptions --enable-cli"
     fi
 
-    # For PHP 5.4.0+, also build php-fpm.
-    # In PHP 5.3.0, only one SAPI can be built at a time
-    # (and we already build php-cgi, hence a conflict).
-    if [ $VMAJOR -gt 5 -o $VMINOR -ge 4 ]; then
-        otheroptions="$otheroptions --enable-fpm"
-    fi
-
     #Disable PEAR installation (handled separately below).
     ./configure $configoptions \
          --prefix="$instdir" \
          --exec-prefix="$instdir" \
          --without-pear \
-         --enable-cgi \
          $otheroptions
 
     if [ $? -gt 0 ]; then
@@ -248,39 +240,41 @@ if [ $PEAR = 1 ]; then
         echo "Please put install-pear-nozlib.phar into bzips/"
         exit 2
     fi
-
-    echo "Installing PEAR environment:     $instdir/pear/"
-    mkdir -p "$instdir/pear/php"
-    sapi/cli/php -n                 \
-        -ddisplay_startup_errors=0  \
-        -dextension_dir="$ext_dir"  \
-        -dextension=phar.so         \
-        -dextension=xml.so          \
-        -dextension=pcre.so         \
-        -dshort_open_tag=0          \
-        -dsafe_mode=0               \
-        -dopen_basedir=             \
-        -derror_reporting=1803      \
-        -dmemory_limit=-1           \
-        -ddetect_unicode=0          \
-        "$pearphar"                 \
-            -dp         "a"                         \
-            -ds         "-$VERSION"                 \
-            --dir       "$instdir/pear/php"         \
-            --bin       "$instdir/bin"              \
-            --config    "$instdir/pear/cfg"         \
-            --www       "$instdir/pear/www"         \
-            --data      "$instdir/pear/data"        \
-            --doc       "$instdir/pear/docs"        \
-            --test      "$instdir/pear/tests"       \
-            --cache     "$instdir/pear/cache"       \
-            --temp      "$instdir/pear/temp"        \
-            --download  "$instdir/pear/downloads"
-    if [ "$?" -gt 0 ]; then
-        echo PEAR installation failed.
-        exit 5
+    
+    if [ $VMAJOR -gt 5 -o $VMINOR -ge 4 ]; then
+        echo "Installing PEAR environment:     $instdir/pear/"
+        mkdir -p "$instdir/pear/php"
+        sapi/cli/php -n                 \
+            -ddisplay_startup_errors=0  \
+            -dextension_dir="$ext_dir"  \
+            -dextension=phar.so         \
+            -dextension=xml.so          \
+            -dextension=pcre.so         \
+            -dshort_open_tag=0          \
+            -dsafe_mode=0               \
+            -dopen_basedir=             \
+            -derror_reporting=1803      \
+            -dmemory_limit=-1           \
+            -ddetect_unicode=0          \
+            "$pearphar"                 \
+                -dp         "a"                         \
+                -ds         "-$VERSION"                 \
+                --dir       "$instdir/pear/php"         \
+                --bin       "$instdir/bin"              \
+                --config    "$instdir/pear/cfg"         \
+                --www       "$instdir/pear/www"         \
+                --data      "$instdir/pear/data"        \
+                --doc       "$instdir/pear/docs"        \
+                --test      "$instdir/pear/tests"       \
+                --cache     "$instdir/pear/cache"       \
+                --temp      "$instdir/pear/temp"        \
+                --download  "$instdir/pear/downloads"
+        if [ "$?" -gt 0 ]; then
+            echo PEAR installation failed.
+            exit 5
+        fi
     fi
-
+    
     #add symlink to extension directory as "ext"
     #for compatibility with Pyrus.
     ln -sfT "$ext_dir" "$instdir/pear/ext"
@@ -328,8 +322,7 @@ fi
 #symlink all files
 
 #php may be called php.gcno
-#same for php-cgi.
-for binary in php php-cgi php-config phpize; do
+for binary in php php-config phpize; do
     if [ -f "$instdir/bin/$binary" ]; then
         ln -fs "$instdir/bin/$binary" "$shbindir/$binary-$VERSION"
     elif [ -f "$instdir/bin/$binary.gcno" ]; then
@@ -351,7 +344,7 @@ done
 
 #strip executables in non-debug builds.
 if [ $DEBUG != 1 ]; then
-    for binary in php php-cgi php-fpm phpdbg; do
+    for binary in php php-fpm phpdbg; do
         if [ -f "$shbindir/$binary-$VERSION" ]; then
             strip --strip-unneeded "$shbindir/$binary-$VERSION"
         fi
