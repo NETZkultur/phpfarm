@@ -281,7 +281,8 @@ if [ $PEAR = 1 ]; then
     ln -sfT "$instdir/pear/cfg" "$instdir/etc/pear"
 fi
 
-#copy php.ini
+#copy php.
+
 #you can define your own ini target directory by setting $initarget
 if [ "x$initarget" = x ]; then
     initarget="$instdir/etc/php.ini"
@@ -301,6 +302,7 @@ fi
 #set default ini values
 cd "$basedir"
 if [ -f "$initarget" ]; then
+    echo > $initarget
     #fixme: make the options unique or so
     custom="custom/php.ini"
     [ ! -e "$custom" ] && cp "default-custom-php.ini" "$custom"
